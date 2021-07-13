@@ -30,35 +30,51 @@ def nomel_main():
     if os.path.isdir("tmp"):
         shutil.rmtree("tmp")
     os.mkdir("tmp")
+    
     shutil.copyfile(source_file, "tmp/{}.{}".format(problem_name, source_suffix))
     shutil.copyfile(data_input, "tmp/{}.{}".format(problem_name, 'in'))
     shutil.copyfile(data_output, "tmp/{}_{}.{}".format(problem_name, key, 'out'))
-    os.system(runCommand)
+    compile_Run = subprocess.Popen(runCommand)
+    CompileStart = time()
+    while True:
+        if (time() - CompileStart > 10):
+            compile_Run.kill()
+        if (compile_Run.poll() is None):
+            continue
+        else:
+            break
     if not os.path.isfile("tmp/{}.exe".format(problem_name)):
         return ("Compile Error", 0, 0, 1)
     os.chdir("tmp")
     startTime = time()
-    user_Run = subprocess.Popen('{}.exe'.format(problem_name))
+    user_Run = subprocess.run('{}.exe'.format(problem_name), shell=True, stderr=subprocess.PIPE)
     endTime = 0
     MemoryUse = 0
     while True:
         is_run = 0
         endTime = time()
-        MemoryUse = psutil.Process(user_Run.pid).memory_info().rss / 1024
+        try:
+            pRun = psutil.Process(user_Run.pid)
+            muse = pRun.memory_info().rss / 1024
+        except Exception as e:
+            break
+        else:
+            if muse > MemoryUse:
+                MemoryUse = muse
         if (MemoryUse > memory_limit):
-            user_Run.kill()
+            os.killpg(user_Run.pid,signal.SIGUSR1)
             return ("Memory Limit Exceeded", endTime - startTime  , MemoryUse, 5)
         if (endTime - startTime >= time_limit):
-            user_Run.kill()
+            os.killpg(user_Run.pid,signal.SIGUSR1)
             return ("Time Limit Exceeded", endTime - startTime  , MemoryUse, 4)
         if (user_Run.poll() is None):
             is_run = 1
         if not is_run:
             break
-    if user_Run.wait() != 0:
+    if user_Run.returncode != 0:
         return ("Runtime Error", endTime - startTime  , MemoryUse, 3)
     diff_val = os.system('diff {}.out {}_{}.out -b -B>diff.txt'.format(problem_name, problem_name, key))
-    if (not judged) and (diff_val > 0):
+    if diff_val > 0:
         return ("Wrong Answer", endTime - startTime  , MemoryUse, 2)
     return ("Accepted", endTime - startTime  , MemoryUse, 0)
 

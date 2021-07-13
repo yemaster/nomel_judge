@@ -1,0 +1,18 @@
+{
+    "compilers": [
+        {
+            "id": 0,
+            "lang": "C++",
+            "suffix": "cpp",
+            "path": "C:\\mingw32\\bin\\g++.exe",
+            "command": "\"{path}\" {base_dir}{source}.cpp -o {base_dir}{source}"
+        },
+        {
+            "id": 1,
+            "lang": "C",
+            "suffix": "c",
+            "path": "D:\\Qt\\Tools\\mingw730_64\\bin\\gcc.exe",
+            "command": "\"{path}\" {base_dir}{source}.c -o {base_dir}{source}"
+        }
+    ]
+}

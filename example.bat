@@ -1,0 +1,1 @@
+python core.py qinggong source/qinggong.cpp 0 data/qinggong/qinggong1.in data/qinggong/qinggong1.ans 1 556070

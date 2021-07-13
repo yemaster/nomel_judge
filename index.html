@@ -1,20 +1,74 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang=en>
 <head>
     <meta charset=utf-8>
-    <meta http-equiv=X-UA-Compatible content="IE=edge">
     <meta name=viewport content="width=device-width,initial-scale=1">
-    <title>PyQt5通过QWebEngineView和QWebChannel搭建交互式浏览器</title>
-    <style>body {
-        margin: 0;
-    }</style>
-    <script src="qwebchannel.js"></script><!--加载qwebchannel.js-->
+    <title>Nomel Judge</title>
+    <script src="./js/jquery.min.js"></script>
+    <link href="./css/semantic.min.css" rel="stylesheet">
+    <script src="./js/semantic.min.js"></script>
+    <script src="qwebchannel.js"></script>
+    <style>
+        body {
+            padding: 0;
+        }
+    html, body, .ui.grid, .column {
+    	height: 100%;
+		overflow-x: hidden;
+	}
+	.column {
+		overflow-y: auto;
+	}
+	::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px #bebebe;
+    background: #bebebe;
+    transition: all 0.5s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px #aaaaaa;
+    background: #aaaaaa;
+}
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 5px #e0e0e0;
+    border-radius: 0;
+    background: #e0e0e0;
+    opacity: 1;
+}
+#leftBar {
+	transition: box-shadow 0.3s; 
+    padding-right: 0 !important;
+}
+#leftBar:hover {
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 20%);
+}
+#leftBar .active.item {
+    background-color: #efefef;
+}
+#leftBar .item {
+    transition: all 0.2s;
+}
+h1,h2,h3,h4,h5,h6 {
+    font-weight: 300;
+}
+#rightBar {
+    padding-top: 20px;
+}
+    </style>
     <script>
+    let transData;
     window.onload = function () {
         try {
             new QWebChannel(qt.webChannelTransport, function (channel) {
-                //将QWebChannel的实例挂载到window.PyHandler，后面在javascript中通过window.PyHandler即可调用
                 window.PyHandler = channel.objects.PyHandler;
+                transData = window.PyHandler.init_home
             });
         } catch (e) {
             window.console.log(e)
@@ -23,14 +77,42 @@
     </script>
 </head>
 <body>
-    <input id="aaa">
-<button onclick="window.PyHandler.init_home(aaa.value)">点击向python回调</button>
-<div id="app"></div>
-<script>
-    //将方法挂载到window便于从webengineview访问
-    window.say_hello = function (msg) {
-        document.getElementById('app').append("这是从python端收到的消息:"+msg);
-    }
-</script>
+    <div class="ui grid" style="width: 100%">
+        <div class="five wide column" id="leftBar">
+            <div class="ui secondary vertical pointing fluid menu">
+                <a class="active item" data-tab="overview">
+                    总览
+                </a>
+                <a class="item" data-tab="users">
+                    选手
+                </a>
+                <a class="item" data-tab="problems">
+                    试题
+                </a>
+                <a class="item" data-tab="stats">
+                    统计
+                </a>
+            </div>
+        </div>
+        <div class="eleven wide column" id="rightBar">
+            <div class="ui tab" data-tab="overview">
+                <h3>总览</h3>
+                <input id = "aaa">
+                <button class="ui button" onclick="transData(aaa.value)">点我</button>
+            </div>
+            <div class="ui tab" data-tab="users">
+                <h3>选手</h3>
+            </div>
+            <div class="ui tab" data-tab="problems">
+                <h3>试题</h3>
+            </div>
+            <div class="ui tab" data-tab="stats">
+                <h3>统计</h3>
+            </div>
+        </div>
+    </div>
+	<script>
+        $('.menu .item').tab();
+	</script>
 </body>
 </html>
