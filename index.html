@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang=en>
+
 <head>
     <meta charset=utf-8>
     <meta name=viewport content="width=device-width,initial-scale=1">
@@ -7,112 +8,421 @@
     <script src="./js/jquery.min.js"></script>
     <link href="./css/semantic.min.css" rel="stylesheet">
     <script src="./js/semantic.min.js"></script>
+    <script src="./js/sweetalert.min.js"></script>
+    <script src="./js/tablesort.js"></script>
     <script src="qwebchannel.js"></script>
     <style>
         body {
             padding: 0;
         }
-    html, body, .ui.grid, .column {
-    	height: 100%;
-		overflow-x: hidden;
-	}
-	.column {
-		overflow-y: auto;
-	}
-	::-webkit-scrollbar {
-    width: 5px;
-}
 
-::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    -webkit-box-shadow: inset 0 0 5px #bebebe;
-    background: #bebebe;
-    transition: all 0.5s;
-}
+        html,
+        body,
+        #app,
+        .ui.grid,
+        .column {
+            height: 100%;
+            overflow-x: hidden;
+        }
 
-::-webkit-scrollbar-thumb:hover {
-    border-radius: 10px;
-    -webkit-box-shadow: inset 0 0 5px #aaaaaa;
-    background: #aaaaaa;
-}
+        .column {
+            overflow-y: auto;
+        }
 
-::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 5px #e0e0e0;
-    border-radius: 0;
-    background: #e0e0e0;
-    opacity: 1;
-}
-#leftBar {
-	transition: box-shadow 0.3s; 
-    padding-right: 0 !important;
-}
-#leftBar:hover {
-	box-shadow: 0 3px 6px rgba(0, 0, 0, 20%);
-}
-#leftBar .active.item {
-    background-color: #efefef;
-}
-#leftBar .item {
-    transition: all 0.2s;
-}
-h1,h2,h3,h4,h5,h6 {
-    font-weight: 300;
-}
-#rightBar {
-    padding-top: 20px;
-}
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            -webkit-box-shadow: inset 0 0 5px #bebebe;
+            background: #bebebe;
+            transition: all 0.5s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            border-radius: 10px;
+            -webkit-box-shadow: inset 0 0 5px #aaaaaa;
+            background: #aaaaaa;
+        }
+
+        ::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 5px #e0e0e0;
+            border-radius: 0;
+            background: #e0e0e0;
+            opacity: 1;
+        }
+
+        #leftBar {
+            transition: box-shadow 0.3s;
+            padding-right: 0 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 20%);
+        }
+
+        #leftBar:hover {
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 20%);
+        }
+
+        #leftBar .active.item {
+            background-color: #efefef;
+        }
+
+        #leftBar .item {
+            transition: all 0.2s;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-weight: 300;
+        }
+
+        #rightBar {
+            padding-top: 30px;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .score10 {
+            background-color: #47af50;
+        }
+        .score9 {
+            background-color: #47af5090;
+        }
+        .score8 {
+            background-color: #47af5080;
+        }
+        .score7 {
+            background-color: #47af5070;
+        }
+        .score6 {
+            background-color: #47af5060;
+        }
+        .score5 {
+            background-color: #db282850;
+            color: #fff;
+        }
+        .score4 {
+            background-color: #db282860;
+            color: #fff;
+        }
+        .score3 {
+            background-color: #db282870;
+            color: #fff;
+        }
+        .score2 {
+            background-color: #db282880;
+            color: #fff;
+        }
+        .score1 {
+            background-color: #d8282890;
+            color: #fff;
+        }
+        .score0 {
+            background-color: #db2828;
+            color: #fff;
+        }
     </style>
     <script>
-    let transData;
-    window.onload = function () {
-        try {
-            new QWebChannel(qt.webChannelTransport, function (channel) {
-                window.PyHandler = channel.objects.PyHandler;
-                transData = window.PyHandler.init_home
-            });
-        } catch (e) {
-            window.console.log(e)
+        let transData, saveData
+        window.onload = function () {
+            try {
+                new QWebChannel(qt.webChannelTransport, function (channel) {
+                    window.PyHandler = channel.objects.PyHandler;
+                    transData = window.PyHandler.init_home
+                    saveData = window.PyHandler.save_file
+                });
+            } catch (e) {
+                window.console.log(e)
+            }
         }
-    }
     </script>
 </head>
+
 <body>
-    <div class="ui grid" style="width: 100%">
-        <div class="five wide column" id="leftBar">
-            <div class="ui secondary vertical pointing fluid menu">
-                <a class="active item" data-tab="overview">
-                    总览
-                </a>
-                <a class="item" data-tab="users">
-                    选手
-                </a>
-                <a class="item" data-tab="problems">
-                    试题
-                </a>
-                <a class="item" data-tab="stats">
-                    统计
-                </a>
+    <div id="app">
+        <div class="ui celled link horizontal list">
+            <div class="ui dropdown item">
+                文件
+                <div class="menu">
+                    <div class="item" @click="NewContest()">
+                        <i class="add icon"></i>
+                        <span class="description">Ctrl + N</span>
+                        新建比赛
+                    </div>
+                    <div class="item" @click="OpenContest()">
+                        <i class="folder open icon"></i>
+                        <span class="description">Ctrl + O</span>
+                        打开比赛
+                    </div>
+                </div>
+            </div>
+            <div class="ui dropdown item">
+                帮助
+                <div class="menu">
+                    <a class="item" @click="showAbout()">
+                        <i class="info icon"></i>
+                        <span class="description">Ctrl + A</span>
+                        关于
+                    </a>
+                </div>
             </div>
         </div>
-        <div class="eleven wide column" id="rightBar">
-            <div class="ui tab" data-tab="overview">
-                <h3>总览</h3>
-                <input id = "aaa">
-                <button class="ui button" onclick="transData(aaa.value)">点我</button>
+        <div class="ui grid" style="width: 100%">
+            <div class="five wide column" id="leftBar">
+                <div class="ui secondary vertical pointing fluid menu">
+                    <a class="active item" data-tab="welcome">
+                        欢迎
+                    </a>
+                    <a class="item" :class="{ disabled: !isOpenFile }" data-tab="overview">
+                        总览
+                    </a>
+                    <a class="item" :class="{ disabled: !isOpenFile }" data-tab="problems">
+                        试题
+                    </a>
+                    <a class="item" v-bind:class="{ disabled: !isOpenFile }" data-tab="users">
+                        选手
+                    </a>
+                    <a class="item" :class="{ disabled: !isOpenFile }" data-tab="stats">
+                        统计
+                    </a>
+                </div>
             </div>
-            <div class="ui tab" data-tab="users">
-                <h3>选手</h3>
-            </div>
-            <div class="ui tab" data-tab="problems">
-                <h3>试题</h3>
-            </div>
-            <div class="ui tab" data-tab="stats">
-                <h3>统计</h3>
+            <div class="eleven wide column" id="rightBar">
+                <div class="ui tab" data-tab="welcome">
+                    <h2>欢迎</h2>
+                    <h3>开始</h3>
+                    <div class="ui list">
+                        <a class="item" @click="NewContest()">
+                            <i class="icon add"></i>
+                            新建比赛
+                        </a>
+                        <a class="item" @click="OpenContest()">
+                            <i class="folder open icon"></i>
+                            打开比赛
+                        </a>
+                    </div>
+                </div>
+                <div class="ui tab" data-tab="overview">
+                    <h2>总览</h2>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th>比赛名称</th>
+                                <td>{{ contestInfo.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>保存位置</th>
+                                <td>{{ contestInfo.dir }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="ui tab" data-tab="problems">
+                    <h2>试题</h2>
+                    <button class="ui labeled icon green button" @click="NewProblem()">
+                        <i class="plus icon"></i>
+                        新建试题
+                    </button>
+                    <div class="ui divider"></div>
+                    <div class="ui fluid styled accordion">
+                        <div v-for="(pb, i) in contestInfo.problems">
+                            <div class="title">
+                                <i class="dropdown icon"></i>
+                                {{ pb.title }}
+                            </div>
+                            <div class="content">
+                                <div class="ui form">
+                                    <div class="field">
+                                        <button class="ui labeled icon red mini button" @click="DeleteProblem(i)">
+                                            <i class="x icon"></i>
+                                            删除题目
+                                        </button>
+                                    </div>
+                                    <div class="field">
+                                        <label>题目标题</label>
+                                        <input type="text" v-model="pb.title">
+                                    </div>
+                                    <div class="field">
+                                        <label>源文件名称</label>
+                                        <input type="text" v-model="pb.source_name">
+                                    </div>
+                                    <div class="field">
+                                        <label>输入文件</label>
+                                        <input type="text" v-model="pb.input_file">
+                                    </div>
+                                    <div class="field">
+                                        <label>输出文件</label>
+                                        <input type="text" v-model="pb.output_file">
+                                    </div>
+                                    <div class="field">
+                                        <label>测试数据</label>
+                                        <table class="ui table">
+                                            <thead>
+                                                <tr>
+                                                    <th>数据点</th>
+                                                    <th>输入文件</th>
+                                                    <th>输出文件</th>
+                                                    <th>时间限制</th>
+                                                    <th>空间限制</th>
+                                                    <th>子任务</th>
+                                                    <th>分值</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="(dt,i) in pb.data">
+                                                    <td>#{{ i + 1 }}</td>
+                                                    <td><input type="text" v-model="dt.in"></td>
+                                                    <td><input type="text" v-model="dt.out"></td>
+                                                    <td><input type="text" v-model="dt.time_limit"></td>
+                                                    <td><input type="text" v-model="dt.memory_limit"></td>
+                                                    <td><input type="text" v-model="dt.subtask"></td>
+                                                    <td><input type="text" v-model="dt.score"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    <button class="ui labeled icon primary button" @click="SaveContest()">
+                        <i class="save icon"></i>
+                        保存
+                    </button>
+                </div>
+                <div class="ui tab" data-tab="users">
+                    <h2>选手</h2>
+                    <div style="overflow-x: auto;">
+                    <table class="ui unstackable single line sortable table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>选手</th>
+                                <th>总分</th>
+                                <th v-for="pb in contestInfo.problems">{{ pb.title }}</th>
+                                <th>总用时</th>
+                                <th>测试时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(sc,i) in contestInfo.sources">
+                                <td>{{ i + 1 }}</td>
+                                <td>{{ sc.name }}</td>
+                                <td>{{ sc.score }}</td>
+                                <td v-for="dt in sc.detailed" :class="'score' + Math.floor(dt.score/10)">{{ dt.score }}</td>
+                                <td>{{ sc.used_time }}</td>
+                                <td>{{ sc.test_date }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                    <div class="ui divider"></div>
+                    <button class="ui basic button">测试全部</button>
+                    <button class="ui primary basic button">测试未测试</button>
+                </div>
+                <div class="ui tab" data-tab="stats">
+                    <h2>统计</h2>
+                </div>
             </div>
         </div>
     </div>
-	<script>
-        $('.menu .item').tab();
-	</script>
+    <script src="./js/vue.min.js"></script>
+    <script>
+        $('#leftBar .item').tab();
+        let nomel_main = new Vue({
+            el: '#app',
+            data: {
+                isOpenFile: 0,
+                ress: [
+                    {
+                        lb: "正确",
+                        cl: "green"
+                    },
+                    {
+                        lb: "编译错误",
+                        cl: "yellow"
+                    },
+                    {
+                        lb: "答案错误",
+                        cl: "red"
+                    },
+                    {
+                        lb: "运行错误",
+                        cl: "purple"
+                    },
+                    {
+                        lb: "时间超限",
+                        cl: "orange"
+                    },
+                    {
+                        lb: "空间超限",
+                        cl: "black"
+                    }
+                ],
+                contestInfo: {},
+                baseProblem: {
+                    input_file: "problem.in",
+                    output_file: "problem.out",
+                    source_name: "problem",
+                    title: "新题目"
+                },
+                az: '2333'
+            },
+            methods: {
+                showAbout() {
+                    swal({
+                        title: "About Nomel v1.0.1",
+                        text: "A Judge for OI\nBy yemaster",
+                        icon: "info",
+                        button: "朕知道了",
+                    })
+                },
+                NewContest() {
+                    transData("New Contest")
+                },
+                OpenContest() {
+                    transData("Open Contest")
+                },
+                InitContest(e) {
+                    this.isOpenFile = 1
+                    this.contestInfo = e
+                    $('#leftBar .item').tab()
+                    $('.ui.accordion').accordion()
+                    $('table.sortable').tablesort()
+                },
+                NewProblem() {
+                    this.contestInfo.problems.push(this.baseProblem)
+                    this.SaveContest()
+                },
+                DeleteProblem(e) {
+                    this.contestInfo.problems.splice(e, 1)
+                    this.SaveContest()
+                },
+                SaveContest() {
+                    saveData(JSON.stringify(this.contestInfo))
+                }
+            }
+        })
+        $('.ui.dropdown').dropdown();
+        $(document).keyup(function (e) {
+            console.log(e)
+            if ((e.ctrlKey || e.metaKey) && e.keyCode == 78) {
+                nomel_main.NewContest()
+            }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode == 79) {
+                nomel_main.OpenContest()
+            }
+            if ((e.ctrlKey || e.metaKey) && e.keyCode == 65) {
+                nomel_main.showAbout()
+            }
+            e.preventDefault();
+            return false;
+        });
+    </script>
 </body>
+
 </html>
