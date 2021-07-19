@@ -126,13 +126,16 @@
         }
     </style>
     <script>
-        let transData, saveData
+        let transData, saveData, getData, getSources, judegStart, doJudgeStart
         window.onload = function () {
             try {
                 new QWebChannel(qt.webChannelTransport, function (channel) {
                     window.PyHandler = channel.objects.PyHandler;
                     transData = window.PyHandler.init_home
                     saveData = window.PyHandler.save_file
+                    getData = window.PyHandler.get_data
+                    getSources = window.PyHandler.get_sources
+                    judegStart = window.PyHandler.judge_start
                 });
             } catch (e) {
                 window.console.log(e)
@@ -188,6 +191,9 @@
                     <a class="item" :class="{ disabled: !isOpenFile }" data-tab="stats">
                         统计
                     </a>
+                    <a class="item" :class="{ disabled: !isOpenFile }" data-tab="advanced">
+                        高级
+                    </a>
                 </div>
             </div>
             <div class="eleven wide column" id="rightBar">
@@ -204,6 +210,8 @@
                             打开比赛
                         </a>
                     </div>
+                    <h3>最近</h3>
+                    <p>没有最近打开的比赛文件</p>
                 </div>
                 <div class="ui tab" data-tab="overview">
                     <h2>总览</h2>
@@ -211,14 +219,22 @@
                         <tbody>
                             <tr>
                                 <th>比赛名称</th>
-                                <td>{{ contestInfo.name }}</td>
+                                <td><div class="ui input"><input v-model="contestInfo.name"></div></td>
                             </tr>
                             <tr>
                                 <th>保存位置</th>
                                 <td>{{ contestInfo.dir }}</td>
                             </tr>
+                            <tr>
+                                <th>题目数</th>
+                                <td>{{ contestInfo.problems.length }}</td>
+                            </tr>
                         </tbody>
                     </table>
+                    <button class="ui labeled icon primary button" @click="SaveContest()">
+                        <i class="save icon"></i>
+                        保存
+                    </button>
                 </div>
                 <div class="ui tab" data-tab="problems">
                     <h2>试题</h2>
@@ -231,7 +247,7 @@
                         <div v-for="(pb, i) in contestInfo.problems">
                             <div class="title">
                                 <i class="dropdown icon"></i>
-                                {{ pb.title }}
+                                T{{ i+1 }}. {{ pb.title }}
                             </div>
                             <div class="content">
                                 <div class="ui form">
@@ -258,8 +274,11 @@
                                         <input type="text" v-model="pb.output_file">
                                     </div>
                                     <div class="field">
+                                        <button class="ui blue mini button" @click="getData(i)">载入测试数据(请先保存)</button>
+                                    </div>
+                                    <div class="field" style="overflow-x: auto;">
                                         <label>测试数据</label>
-                                        <table class="ui table">
+                                        <table class="ui unstackable table" style="min-width: 900px">
                                             <thead>
                                                 <tr>
                                                     <th>数据点</th>
@@ -296,6 +315,7 @@
                 </div>
                 <div class="ui tab" data-tab="users">
                     <h2>选手</h2>
+                    <div class="ui text loader">评测中</div>
                     <div style="overflow-x: auto;">
                     <table class="ui unstackable single line sortable table">
                         <thead>
@@ -321,11 +341,27 @@
                     </table>
                     </div>
                     <div class="ui divider"></div>
-                    <button class="ui basic button">测试全部</button>
-                    <button class="ui primary basic button">测试未测试</button>
+                    <button class="ui blue basic button" @click="getSources('2333')">刷新并重置</button>
+                    <button class="ui basic button" @click="StartJudge('all')">测试全部</button>
+                    <button class="ui green basic button">测试未测试</button>
                 </div>
                 <div class="ui tab" data-tab="stats">
                     <h2>统计</h2>
+                </div>
+                <div class="ui tab" data-tab="advanced">
+                    <h2>高级</h2>
+                    <div class="ui form">
+                        <div class="field">
+                            <textarea readonly>{{ JSON.stringify(contestInfo) }}</textarea>
+                        </div>
+                        <div class="field">
+                            <label>命令</label>
+                            <input id="aaa">
+                        </div>
+                        <div class="field">
+                            <button class="ui button primary" @click="transData(aaa.value)">运行</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -363,14 +399,21 @@
                         cl: "black"
                     }
                 ],
-                contestInfo: {},
+                contestInfo: {
+                    name: "新建比赛",
+                    dir: "",
+                    problems: [],
+                    sources: []
+                },
                 baseProblem: {
                     input_file: "problem.in",
                     output_file: "problem.out",
                     source_name: "problem",
-                    title: "新题目"
+                    title: "新题目",
+                    data: []
                 },
-                az: '2333'
+                az: '2333',
+                isJudge: 0
             },
             methods: {
                 showAbout() {
@@ -394,6 +437,9 @@
                     $('.ui.accordion').accordion()
                     $('table.sortable').tablesort()
                 },
+                loadContest(e) {
+                    this.contestInfo = e
+                },
                 NewProblem() {
                     this.contestInfo.problems.push(this.baseProblem)
                     this.SaveContest()
@@ -404,6 +450,9 @@
                 },
                 SaveContest() {
                     saveData(JSON.stringify(this.contestInfo))
+                },
+                StartJudge(e) {
+                    judegStart(e)
                 }
             }
         })

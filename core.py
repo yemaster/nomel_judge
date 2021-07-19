@@ -32,8 +32,9 @@ def nomel_main():
     os.mkdir("tmp")
     
     shutil.copyfile(source_file, "tmp/{}.{}".format(problem_name, source_suffix))
-    shutil.copyfile(data_input, "tmp/{}.{}".format(problem_name, 'in'))
-    shutil.copyfile(data_output, "tmp/{}_{}.{}".format(problem_name, key, 'out'))
+    if (data_input != 'BY'):
+        shutil.copyfile(data_input, "tmp/{}.{}".format(problem_name, 'in'))
+        shutil.copyfile(data_output, "tmp/{}_{}.{}".format(problem_name, key, 'out'))
     compile_Run = subprocess.Popen(runCommand)
     CompileStart = time()
     while True:
@@ -45,6 +46,8 @@ def nomel_main():
             break
     if not os.path.isfile("tmp/{}.exe".format(problem_name)):
         return ("Compile Error", 0, 0, 1)
+    if (data_input == 'BY'):
+        return ("Compile OK", 0, 0, 0)
     os.chdir("tmp")
     startTime = time()
     user_Run = subprocess.run('{}.exe'.format(problem_name), shell=True, stderr=subprocess.PIPE)
@@ -73,7 +76,7 @@ def nomel_main():
             break
     if user_Run.returncode != 0:
         return ("Runtime Error", endTime - startTime  , MemoryUse, 3)
-    diff_val = os.system('diff {}.out {}_{}.out -b -B>diff.txt'.format(problem_name, problem_name, key))
+    diff_val = os.system('diff {}.out {}_{}.out --ignore-space-change --text --brief>diff.txt'.format(problem_name, problem_name, key))
     if diff_val > 0:
         return ("Wrong Answer", endTime - startTime  , MemoryUse, 2)
     return ("Accepted", endTime - startTime  , MemoryUse, 0)
