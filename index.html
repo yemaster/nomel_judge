@@ -88,38 +88,48 @@
         .score10 {
             background-color: #47af50;
         }
+
         .score9 {
             background-color: #47af5090;
         }
+
         .score8 {
             background-color: #47af5080;
         }
+
         .score7 {
             background-color: #47af5070;
         }
+
         .score6 {
             background-color: #47af5060;
         }
+
         .score5 {
             background-color: #db282850;
             color: #fff;
         }
+
         .score4 {
             background-color: #db282860;
             color: #fff;
         }
+
         .score3 {
             background-color: #db282870;
             color: #fff;
         }
+
         .score2 {
             background-color: #db282880;
             color: #fff;
         }
+
         .score1 {
             background-color: #d8282890;
             color: #fff;
         }
+
         .score0 {
             background-color: #db2828;
             color: #fff;
@@ -219,7 +229,9 @@
                         <tbody>
                             <tr>
                                 <th>比赛名称</th>
-                                <td><div class="ui input"><input v-model="contestInfo.name"></div></td>
+                                <td>
+                                    <div class="ui input"><input v-model="contestInfo.name"></div>
+                                </td>
                             </tr>
                             <tr>
                                 <th>保存位置</th>
@@ -317,33 +329,38 @@
                     <h2>选手</h2>
                     <div class="ui text loader">评测中</div>
                     <div style="overflow-x: auto;">
-                    <table class="ui unstackable single line sortable table">
-                        <thead>
-                            <tr>
-                                <th>排名</th>
-                                <th>选手</th>
-                                <th>总分</th>
-                                <th v-for="pb in contestInfo.problems">{{ pb.title }}</th>
-                                <th>总用时</th>
-                                <th>测试时间</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(sc,i) in contestInfo.sources">
-                                <td>{{ i + 1 }}</td>
-                                <td>{{ sc.name }}</td>
-                                <td>{{ sc.score }}</td>
-                                <td v-for="dt in sc.detailed" :class="'score' + Math.floor(dt.score/10)">{{ dt.score }}</td>
-                                <td>{{ sc.used_time }}</td>
-                                <td>{{ sc.test_date }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                        <table class="ui unstackable single line sortable table">
+                            <thead>
+                                <tr>
+                                    <th>排名</th>
+                                    <th>选手</th>
+                                    <th>总分</th>
+                                    <th v-for="pb in contestInfo.problems">{{ pb.title }}</th>
+                                    <th>总用时</th>
+                                    <th>测试时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(sc,i) in contestInfo.sources">
+                                    <td>{{ i + 1 }}</td>
+                                    <td>
+                                        <a @click="showUser(i)">
+                                            {{ sc.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ sc.score }}</td>
+                                    <td v-for="dt in sc.detailed" :class="'score' + Math.floor(dt.score/10)">{{ dt.score
+                                        }}</td>
+                                    <td>{{ sc.used_time }}</td>
+                                    <td>{{ sc.test_date }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                     <div class="ui divider"></div>
                     <button class="ui blue basic button" @click="getSources('2333')">刷新并重置</button>
-                    <button class="ui basic button" @click="StartJudge('all')">测试全部</button>
-                    <button class="ui green basic button">测试未测试</button>
+                    <button class="ui basic button" :class="{ 'elastic loading': isJudge }" @click="StartJudge('all')">测试全部</button>
+                    <button class="ui green basic button" :class="{ 'elastic loading': isJudge }">测试未测试</button>
                 </div>
                 <div class="ui tab" data-tab="stats">
                     <h2>统计</h2>
@@ -362,6 +379,51 @@
                             <button class="ui button primary" @click="transData(aaa.value)">运行</button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="ui modal" style="max-height: 100%; overflow-x: auto;">
+            <i class="close icon"></i>
+            <div class="header">
+                成绩统计: {{ showingUser.name }}
+            </div>
+            <div class="content">
+                总分: {{ showingUser.score }}
+                <div class="ui divider"></div>
+                <div v-for="(dl, i) in showingUser.detailed">
+                    <h3>T{{ i + 1 }}.{{ contestInfo.problems[i].title }}</h3>
+                    <div class="ui primary label">
+                        得分: {{ dl.score }}
+                    </div>
+                    <div class="ui label">
+                        说明: {{ dl.res }}
+                    </div>
+                    <table class="ui unstackable table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>状态</th>
+                                <th>得分</th>
+                                <th>用时(s)</th>
+                                <th>内存(KB)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(dtsa, i) in dl.datas">
+                                <td>{{ i + 1 }}</td>
+                                <td :class="colors[dtsa.res]">{{ dtsa.res }}</td>
+                                <td>{{ dtsa.score }}</td>
+                                <td>{{ dtsa.time }}</td>
+                                <td>{{ dtsa.memory }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="actions">
+                <div class="ui positive right labeled icon button">
+                    OK
+                    <i class="checkmark icon"></i>
                 </div>
             </div>
         </div>
@@ -405,6 +467,20 @@
                     problems: [],
                     sources: []
                 },
+                colors: {
+                    "正确": "green",
+                    "答案错误": "red",
+                    "编译错误": "yellow",
+                    "运行错误": "purple",
+                    "时间超限": "orange",
+                    "内存超限": "black",
+                    "\u6b63\u786e": "green",
+                    "\u7b54\u6848\u9519\u8bef": "red",
+                    "\u7f16\u8bd1\u9519\u8bef": "yellow",
+                    "\u8fd0\u884c\u9519\u8bef": "purple",
+                    "\u65f6\u95f4\u8d85\u9650": "orange",
+                    "\u5185\u5b58\u8d85\u9650": "black"
+                },
                 baseProblem: {
                     input_file: "problem.in",
                     output_file: "problem.out",
@@ -413,7 +489,11 @@
                     data: []
                 },
                 az: '2333',
-                isJudge: 0
+                isJudge: 0,
+                showingUser: {
+                    name: "",
+                },
+                showingUserId: -1
             },
             methods: {
                 showAbout() {
@@ -438,7 +518,12 @@
                     $('table.sortable').tablesort()
                 },
                 loadContest(e) {
-                    this.contestInfo = e
+                    let _t = this
+                    _t.contestInfo = e
+                    if (_t.showingUserId != -1) {
+                        _t.showingUser = _t.contestInfo.sources[_t.showingUserId]
+                        $(".ui.modal").scrollTop($(".ui.modal")[0].scrollHeight);
+                    }
                 },
                 NewProblem() {
                     this.contestInfo.problems.push(this.baseProblem)
@@ -453,6 +538,17 @@
                 },
                 StartJudge(e) {
                     judegStart(e)
+                    $('.ui.modal')
+                        .modal('show')
+                        ;
+                },
+                showUser(e) {
+                    let _t = this
+                    _t.showingUserId = e
+                    _t.showingUser = _t.contestInfo.sources[e]
+                    $('.ui.modal')
+                        .modal('show')
+                    ;
                 }
             }
         })

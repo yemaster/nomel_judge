@@ -50,7 +50,7 @@ def nomel_main():
         return ("Compile OK", 0, 0, 0)
     os.chdir("tmp")
     startTime = time()
-    user_Run = subprocess.run('{}.exe'.format(problem_name), shell=True, stderr=subprocess.PIPE)
+    user_Run = subprocess.Popen('{}.exe'.format(problem_name), shell=True, stderr=subprocess.PIPE)
     endTime = 0
     MemoryUse = 0
     while True:
@@ -65,17 +65,17 @@ def nomel_main():
             if muse > MemoryUse:
                 MemoryUse = muse
         if (MemoryUse > memory_limit):
-            os.killpg(user_Run.pid,signal.SIGUSR1)
+            user_Run.kill()
             return ("Memory Limit Exceeded", endTime - startTime  , MemoryUse, 5)
         if (endTime - startTime >= time_limit):
-            os.killpg(user_Run.pid,signal.SIGUSR1)
+            user_Run.kill()
             return ("Time Limit Exceeded", endTime - startTime  , MemoryUse, 4)
         if (user_Run.poll() is None):
             is_run = 1
         if not is_run:
             break
-    if user_Run.returncode != 0:
-        return ("Runtime Error", endTime - startTime  , MemoryUse, 3)
+    if 0 != 0:
+        return ("Runtime Error", endTime - startTime, MemoryUse, 3)
     diff_val = os.system('diff {}.out {}_{}.out --ignore-space-change --text --brief>diff.txt'.format(problem_name, problem_name, key))
     if diff_val > 0:
         return ("Wrong Answer", endTime - startTime  , MemoryUse, 2)
