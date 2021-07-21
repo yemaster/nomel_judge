@@ -6,7 +6,7 @@ A Judger for OI(offline)
 需要安装python3
 
 ```bash
-pip install psutil
+pip install psutil PyQt5 PyQtWebengine
 ```
 
 ## 运行
